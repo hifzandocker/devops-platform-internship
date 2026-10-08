@@ -1,24 +1,14 @@
 # DevOps Platform Internship
 
-Enterprise-style DevOps platform built during the Parallax Labs internship.
+Enterprise-style DevOps platform being developed during the Parallax Labs DevOps Engineering Internship.
 
-## Project Overview
+This repository is the single GitHub repository used throughout the internship. Work is added progressively to the same repository each week.
 
-This repository contains the complete implementation of the six-week DevOps internship project, including:
+## Current Status
 
-* Microservices
-* Docker containers
-* Kubernetes
-* Terraform infrastructure
-* Helm
-* Service mesh and mTLS
-* Kong API Gateway
-* GitHub Actions CI
-* ArgoCD GitOps CD
-* Prometheus and Grafana observability
-* Canary deployments and automated rollback
+**Week 1 — Complete**
 
-The project is maintained in a single GitHub repository throughout the internship.
+Week 1 establishes the microservice and Docker foundation for the project.
 
 ## Repository Structure
 
@@ -27,9 +17,18 @@ The project is maintained in a single GitHub repository throughout the internshi
 |-- README.md
 |-- services/
 |   |-- frontend/
+|   |   |-- app.py
+|   |   |-- Dockerfile
+|   |   `-- .dockerignore
+|   |
 |   `-- backend/
+|       |-- app.py
+|       |-- Dockerfile
+|       `-- .dockerignore
+|
 |-- docs/
 |-- week-1/
+|   `-- verification.md
 |-- week-2/
 |-- week-3/
 |-- week-4/
@@ -39,13 +38,20 @@ The project is maintained in a single GitHub repository throughout the internshi
 |-- k8s/
 |-- gateway/
 |-- observability/
+|
 `-- .github/
     `-- workflows/
 ```
 
+`services/` contains the microservice source code.
+
+`week-1/verification.md` contains the detailed Week 1 verification record.
+
+The remaining directories are reserved for work that will be added during later weeks.
+
 ## Prerequisites
 
-The following tools have been installed and verified locally:
+The following tools were installed and verified during Week 1:
 
 | Tool           | Version / Result |
 | -------------- | ---------------- |
@@ -56,9 +62,24 @@ The following tools have been installed and verified locally:
 | Helm           | v4.3.0           |
 | Terraform      | v1.16.4          |
 
-### Docker Verification
+### WSL
 
-Docker Engine was verified with:
+Verified with:
+
+```powershell
+wsl --list --verbose
+```
+
+Result:
+
+```text
+NAME              STATE           VERSION
+* docker-desktop  Running         2
+```
+
+### Docker
+
+Verified with:
 
 ```powershell
 docker info --format '{{.ServerVersion}}'
@@ -70,188 +91,224 @@ Result:
 29.4.0
 ```
 
-Docker was also tested with:
+Docker was also verified with:
 
 ```powershell
 docker run --rm hello-world
 ```
 
-The test completed successfully.
-
-### WSL Verification
-
-WSL was checked with:
+### Docker Compose
 
 ```powershell
-wsl --list --verbose
+docker compose version
 ```
 
-Current result:
+Result:
 
 ```text
-NAME              STATE           VERSION
-* docker-desktop  Running         2
+Docker Compose version v5.1.1
 ```
 
-## Week 1 Goals
+### kubectl
 
-* Build an independent frontend microservice.
-* Build an independent backend microservice.
-* Implement `/health` and `/info` endpoints.
-* Run and test both services locally.
-* Create optimized multi-stage Dockerfiles.
-* Run containers as non-root user `1001`.
-* Add `.dockerignore` files.
-* Build and run both services locally with Docker.
-* Document successful health checks and reproducible commands.
+```powershell
+kubectl version --client
+```
 
-## Week 1 Implementation
-
-### Architecture
+Verified:
 
 ```text
-Developer
-   |
-   v
-Git Repository
-   |
-   +-------------------+
-   |                   |
-   v                   v
-Frontend Service    Backend Service
-Port 8080           Port 8081
-   |                   |
-   +--------+----------+
-            |
-       Local Docker
-       Containers
+Client Version: v1.34.1
+Kustomize Version: v5.7.1
+```
+
+### Helm
+
+```powershell
+helm version
+```
+
+Verified:
+
+```text
+v4.3.0
+```
+
+### Terraform
+
+```powershell
+terraform version
+```
+
+Verified:
+
+```text
+Terraform v1.16.4
+```
+
+## Week 1 Architecture
+
+The Week 1 implementation consists of two independent HTTP microservices running as Docker containers.
+
+```text
+                         Developer
+                            |
+                            v
+                     GitHub Repository
+                            |
+                 +----------+----------+
+                 |                     |
+                 v                     v
+          Frontend Service      Backend Service
+             Port 8080             Port 8081
+                 |                     |
+                 v                     v
+          Docker Container      Docker Container
+             UID 1001              UID 1001
 ```
 
 The frontend and backend are independent HTTP microservices.
 
+## Frontend
+
+Location:
+
+```text
+services/frontend/
+```
+
 The frontend listens on port `8080`.
+
+### Endpoints
+
+`GET /health`
+
+Verified result:
+
+```text
+HTTP 200 OK
+OK
+```
+
+`GET /info`
+
+Verified result:
+
+```json
+{"service": "frontend", "version": "1.0.0"}
+```
+
+## Backend
+
+Location:
+
+```text
+services/backend/
+```
 
 The backend listens on port `8081`.
 
-Each service provides `/health` and `/info` endpoints.
+### Endpoints
 
-### Service Structure
+`GET /health`
+
+Verified result:
 
 ```text
-services/
-|-- frontend/
-|   |-- app.py
-|   |-- Dockerfile
-|   `-- .dockerignore
-|
-`-- backend/
-    |-- app.py
-    |-- Dockerfile
-    `-- .dockerignore
+HTTP 200 OK
+OK
 ```
 
-### API Endpoints
+`GET /info`
 
-| Service  | Endpoint  | Expected Result                           |
-| -------- | --------- | ----------------------------------------- |
-| Frontend | `/health` | HTTP 200 and `OK`                         |
-| Frontend | `/info`   | HTTP 200 and frontend service information |
-| Backend  | `/health` | HTTP 200 and `OK`                         |
-| Backend  | `/info`   | HTTP 200 and backend service information  |
+Verified result:
 
-### Docker Implementation
+```json
+{"service": "backend", "version": "1.0.0"}
+```
 
-Both services use multi-stage Dockerfiles.
+## Docker Implementation
 
-Both services use the lightweight `python:3.14-slim` base image.
+Both services use:
 
-Both runtime containers run as non-root user `1001`.
+* Multi-stage Dockerfiles
+* `python:3.14-slim`
+* Non-root runtime user `1001`
+* `.dockerignore`
 
-Both services have a `.dockerignore` file.
+## Build
 
-### Build Images
+Run these commands from the repository root.
 
-Build the frontend image:
+### Frontend
 
 ```powershell
 docker build -t frontend:week1 .\services\frontend
 ```
 
-Build the backend image:
+### Backend
 
 ```powershell
 docker build -t backend:week1 .\services\backend
 ```
 
-### Run Containers
+## Run
 
-Run the frontend:
+### Frontend
 
 ```powershell
 docker run -d --name frontend-week1 -p 8080:8080 frontend:week1
 ```
 
-Run the backend:
+### Backend
 
 ```powershell
 docker run -d --name backend-week1 -p 8081:8081 backend:week1
 ```
 
-### Verify Health Endpoints
+## Verification
 
-Frontend:
+### Frontend
 
 ```powershell
 curl.exe -i http://localhost:8080/health
-```
-
-Result:
-
-```text
-HTTP 200 OK
-OK
-```
-
-Backend:
-
-```powershell
-curl.exe -i http://localhost:8081/health
-```
-
-Result:
-
-```text
-HTTP 200 OK
-OK
-```
-
-### Verify Information Endpoints
-
-Frontend:
-
-```powershell
 curl.exe -i http://localhost:8080/info
 ```
 
-Result:
+Verified `/health` response:
 
 ```text
+HTTP 200 OK
+OK
+```
+
+Verified `/info` response:
+
+```json
 {"service": "frontend", "version": "1.0.0"}
 ```
 
-Backend:
+### Backend
 
 ```powershell
+curl.exe -i http://localhost:8081/health
 curl.exe -i http://localhost:8081/info
 ```
 
-Result:
+Verified `/health` response:
 
 ```text
+HTTP 200 OK
+OK
+```
+
+Verified `/info` response:
+
+```json
 {"service": "backend", "version": "1.0.0"}
 ```
 
-### Container Security Verification
+## Container User Verification
 
 The configured Docker user was verified with:
 
@@ -260,7 +317,7 @@ docker image inspect frontend:week1 --format '{{.Config.User}}'
 docker image inspect backend:week1 --format '{{.Config.User}}'
 ```
 
-Result:
+Verified result:
 
 ```text
 1001
@@ -274,29 +331,47 @@ docker exec frontend-week1 id
 docker exec backend-week1 id
 ```
 
-Both containers run with UID `1001`.
+The containers were verified to run with UID `1001`.
 
-### Week 1 Verification Record
+## Week 1 Verification Record
 
-Detailed Week 1 testing and Docker verification is recorded in:
+Detailed verification evidence is available in:
 
-`week-1/verification.md`
+```text
+week-1/verification.md
+```
+
+It records the prerequisite checks, Docker builds, container execution, endpoint tests, and non-root user verification completed during Week 1.
+
+## Cleanup
+
+Stop and remove the Week 1 containers:
+
+```powershell
+docker rm -f frontend-week1 backend-week1
+```
+
+Remove the local images if no longer needed:
+
+```powershell
+docker rmi frontend:week1 backend:week1
+```
 
 ## Development Workflow
 
-Changes are made locally and tracked with Git:
+Changes are made locally and tracked with Git.
 
-```text
-Change files
+```powershell
 git status
-git add
-git commit
+git add .
+git commit -m "description of change"
 git push
-GitHub
 ```
+
+The same GitHub repository will be used throughout the internship.
 
 ## Security
 
-Secrets, environment files, Terraform state, logs, temporary files, and other local/generated files are excluded through `.gitignore`.
+The repository uses `.gitignore` to exclude common generated and sensitive local files.
 
-Real passwords, API keys, access tokens, credentials, or other secrets must never be committed to this repository.
+Real passwords, API keys, access tokens, credentials, and other secrets must never be committed to the repository.
