@@ -375,3 +375,127 @@ The same GitHub repository will be used throughout the internship.
 The repository uses `.gitignore` to exclude common generated and sensitive local files.
 
 Real passwords, API keys, access tokens, credentials, and other secrets must never be committed to the repository.
+
+
+## Week 2 — Kubernetes, Helm, and Service Mesh
+
+### Objectives
+
+Week 2 extends the Week 1 Dockerized microservices into a local Kubernetes environment. A parameterized Helm chart deploys the frontend and backend services, and Istio provides service-mesh sidecars and strict mutual TLS (mTLS).
+
+### Local Kubernetes Environment
+
+The local Kubernetes cluster runs using Minikube with the Docker driver.
+
+Verified tools:
+- Minikube v1.39.0
+- kubectl v1.34.1
+- Helm v4.3.0
+
+### Helm Chart
+
+Chart location:
+
+```text
+helm/microservices/
+```
+
+The chart deploys the frontend and backend with configurable image repositories, tags, replica counts, ports, health probes, resource requests and limits, and container security contexts.
+
+Both deployments use non-root UID `1001`, disable privilege escalation, and drop Linux capabilities.
+
+Services are exposed internally as Kubernetes `ClusterIP` services:
+- Frontend: port `8080`
+- Backend: port `8081`
+
+### Helm Validation
+
+Validate the chart:
+
+```powershell
+helm lint .\helm\microservices
+helm template microservices .\helm\microservices
+```
+
+The chart passed `helm lint` with zero failed charts. Rendered output was checked for both Deployments, both Services, and the strict mTLS policy.
+
+### Istio Service Mesh
+
+Istio was installed using Helm into the `istio-system` namespace. The `default` namespace was labeled for automatic sidecar injection, and the frontend and backend deployments were restarted to receive their proxies.
+
+Verify the workloads:
+
+```powershell
+kubectl get pods
+kubectl get deployments
+```
+
+Both application pods were verified as `2/2 Running`, indicating that their application containers and Istio sidecars were ready.
+
+### Strict Mutual TLS
+
+The `PeerAuthentication` resource in the `default` namespace is configured with:
+
+```yaml
+spec:
+  mtls:
+    mode: STRICT
+```
+
+Verify the policy:
+
+```powershell
+kubectl get peerauthentication default -n default -o yaml
+```
+
+### mTLS Connectivity Verification
+
+An injected test client pod (`2/2 Running`) successfully requested the backend health endpoint:
+
+```powershell
+kubectl exec mtls-client -c mtls-client -- curl -sS --connect-timeout 5 http://microservices-backend:8081/health
+```
+
+Verified response:
+
+```text
+OK
+```
+
+An uninjected test pod's plaintext HTTP request previously failed with `Connection reset by peer`. This result is consistent with strict mTLS enforcement. The successful injected-client request, the configured `STRICT` policy, and the proxy TLS configuration provide supporting verification evidence.
+
+Temporary test pods were removed after testing.
+
+### Accessing Services Locally
+
+Use separate PowerShell terminals for port forwarding:
+
+```powershell
+kubectl port-forward svc/microservices-frontend 8080:8080
+```
+
+```powershell
+kubectl port-forward svc/microservices-backend 8081:8081
+```
+
+Then test the endpoints:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8080/health
+Invoke-RestMethod http://127.0.0.1:8081/health
+```
+
+Both endpoints returned `OK` during verification.
+
+### Week 2 Status
+
+Completed:
+- Parameterized Helm chart for frontend and backend
+- Local Minikube Kubernetes deployment
+- Istio installation using Helm
+- Automatic sidecar injection for application workloads
+- `PeerAuthentication` configured for strict mTLS
+- Injected-client backend connectivity test
+- Helm lint and rendered-manifest validation
+
+

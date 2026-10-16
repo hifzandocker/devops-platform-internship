@@ -1,0 +1,16 @@
+The frontend and backend microservices have been deployed.
+
+To access the frontend locally, run:
+  kubectl port-forward svc/{{ include "microservices.fullname" . }}-frontend 8080:8080
+
+Then visit:
+  http://127.0.0.1:8080/health
+
+To access the backend locally, open another terminal and run:
+  kubectl port-forward svc/{{ include "microservices.fullname" . }}-backend 8081:8081
+
+Then visit:
+  http://127.0.0.1:8081/health
+
+Check deployment status with:
+  kubectl get deployments,services
