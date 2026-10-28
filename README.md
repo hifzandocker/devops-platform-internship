@@ -499,3 +499,143 @@ Completed:
 - Helm lint and rendered-manifest validation
 
 
+
+## Week 3 — Kong API Gateway and CI/CD
+
+### Objectives
+
+Week 3 adds Kong API Gateway in front of the frontend service, protects the route with API key authentication, applies rate limiting, and automates linting, testing, and Docker image publishing through GitHub Actions.
+
+### Kong API Gateway
+
+Kong is deployed in the local Minikube Kubernetes cluster in the `kong` namespace. Its declarative configuration is stored in:
+
+```text
+gateway/
+|-- kong.yml
+`-- kong-values.yaml
+```
+
+The configuration defines a route to the frontend Kubernetes Service:
+
+```text
+microservices-frontend.default.svc.cluster.local:8080
+```
+
+The Kong Helm chart is configured to use a declarative ConfigMap, with the database disabled.
+
+### API Key Authentication
+
+The Kong `key-auth` plugin protects the frontend route. Requests without a valid API key are rejected with `401 Unauthorized`.
+
+For local testing, the configured demo consumer uses the API key:
+
+```text
+week3-demo-key-change-me
+```
+
+This is a development-only example key, not a production secret.
+
+### Rate Limiting
+
+The Kong `rate-limiting` plugin is configured for a limit of five requests per minute, using the local policy.
+
+Requests include rate-limit response headers. When the configured limit is exceeded, Kong returns `429 Too Many Requests`.
+
+### Accessing Kong Locally
+
+Use a PowerShell terminal to forward local port `8000` to the Kong proxy service:
+
+```powershell
+kubectl port-forward -n kong service/kong-kong-proxy 8000:80
+```
+
+Keep this terminal running while testing Kong from another PowerShell terminal.
+
+### Verification
+
+Test that requests without an API key are rejected:
+
+```powershell
+curl.exe -i http://localhost:8000/health
+```
+
+Expected result:
+
+```text
+401 Unauthorized
+```
+
+Test the frontend health endpoint with the demo API key:
+
+```powershell
+curl.exe -i -H "apikey: week3-demo-key-change-me" http://localhost:8000/health
+```
+
+Expected result:
+
+```text
+200 OK
+OK
+```
+
+The rate limit can be verified by sending repeated requests with the API key and checking the response status and rate-limit headers. Once the limit is exceeded within the configured minute, Kong returns `429 Too Many Requests`.
+
+### GitHub Actions CI/CD
+
+The workflow is located at:
+
+```text
+.github/workflows/ci.yml
+```
+
+It runs on pushes to `main` and pull requests targeting `main`.
+
+The workflow performs the following steps:
+
+1. Checks out the repository.
+2. Sets up Python.
+3. Runs Ruff lint checks for the frontend and backend services.
+4. Runs each service's Python unit tests.
+5. Builds Docker images after the test job succeeds.
+6. Publishes both images to GitHub Container Registry (GHCR).
+
+### Unit Tests
+
+Tests are located in:
+
+```text
+services/frontend/tests/
+services/backend/tests/
+```
+
+They cover the health endpoint, service information endpoint, and handling of unknown paths.
+
+### Docker Image Publishing
+
+The workflow builds and pushes these images:
+
+```text
+ghcr.io/hifzandocker/frontend:<commit-sha>
+ghcr.io/hifzandocker/backend:<commit-sha>
+```
+
+Each image is tagged with the Git commit SHA that triggered the workflow. This makes published builds identifiable and traceable to their source revision.
+
+The workflow uses GitHub Actions' `GITHUB_TOKEN` to authenticate with GHCR and grants the required package-write permission.
+
+### Week 3 Status
+
+Completed and verified:
+
+- Kong API Gateway installed in Minikube
+- Frontend route configured through Kong
+- API key authentication enabled
+- Rate limiting configured for five requests per minute
+- Unauthorized requests rejected
+- Authenticated frontend health requests returned `200 OK`
+- Rate limiting verified through `429 Too Many Requests`
+- GitHub Actions linting and unit tests passed
+- Frontend and backend Docker images published to GHCR with commit-SHA tags
+
+
