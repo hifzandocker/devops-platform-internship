@@ -1,0 +1,29 @@
+_format_version: "3.0"
+
+services:
+  - name: frontend-service
+    url: http://microservices-frontend.default.svc.cluster.local:8080
+    routes:
+      - name: frontend-route
+        paths:
+          - /
+        strip_path: false
+
+plugins:
+  - name: key-auth
+    route: frontend-route
+    config:
+      key_names:
+        - apikey
+      hide_credentials: true
+
+  - name: rate-limiting
+    route: frontend-route
+    config:
+      minute: 5
+      policy: local
+
+consumers:
+  - username: week3-client
+    keyauth_credentials:
+      - key: week3-demo-key-change-me
