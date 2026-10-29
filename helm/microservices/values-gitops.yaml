@@ -1,0 +1,76 @@
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+# Configuration for the frontend and backend microservices
+
+frontend:
+  image:
+    repository: ghcr.io/hifzandocker/frontend
+    tag: e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8080
+  containerPort: 8080
+  healthCheck:
+    path: /health
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+backend:
+  image:
+    repository: ghcr.io/hifzandocker/backend
+    tag: e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 8081
+  containerPort: 8081
+  healthCheck:
+    path: /health
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+# Disabled for Week 2; gateway configuration comes later
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+httpRoute:
+  enabled: false
+
+# Disabled for Week 2
+autoscaling:
+  enabled: false
+
