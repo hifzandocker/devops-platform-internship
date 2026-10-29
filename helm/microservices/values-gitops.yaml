@@ -7,6 +7,7 @@ serviceAccount:
 # Configuration for the frontend and backend microservices
 
 frontend:
+  replicaCount: 2
   image:
     repository: ghcr.io/hifzandocker/frontend
     tag: e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a
@@ -73,4 +74,3 @@ httpRoute:
 # Disabled for Week 2
 autoscaling:
   enabled: false
-
