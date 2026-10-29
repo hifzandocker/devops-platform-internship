@@ -639,13 +639,137 @@ Completed and verified:
 - Frontend and backend Docker images published to GHCR with commit-SHA tags
 
 
-### Week 4 Status
+## Week 4: GitOps Continuous Deployment
 
-Completed and verified:
+### Objectives and Implementation
 
-- Argo CD configured to deploy microservices from GitHub using Helm
-- Automated sync enabled with pruning and self-healing
-- Frontend and backend services verified healthy in Kubernetes
-- Frontend and backend health endpoints returned `200 OK`
-- Argo CD Slack notification integration tested successfully
+- Installed and configured Argo CD in the Kubernetes cluster running on Minikube.
+- Configured the Argo CD application `microservices-gitops` to monitor the GitHub repository using Helm.
+- Enabled automated synchronization, pruning, and self-healing.
+- Configured frontend and backend deployments using Helm values stored in Git.
+- Configured Slack notifications for Argo CD synchronization events and verified that a notification was delivered successfully.
+- Verified frontend and backend health endpoints returned `200 OK`.
 
+### GitOps Auto-Sync Verification
+
+**Test date:** October 29, 2026
+
+**Test procedure:**
+
+1. Recorded the initial deployment state: frontend `2/2` replicas ready and backend `1/1` replica ready.
+2. Changed `frontend.replicaCount` from `2` to `3` in `helm/microservices/values-gitops.yaml`.
+3. Committed the change as `7769d5f`.
+4. Pushed the commit to the `main` branch on GitHub.
+5. Verified that Argo CD detected the new Git revision.
+6. Verified that Kubernetes automatically scaled the frontend deployment to three ready replicas without manually changing the deployment.
+
+**Results:**
+
+- Git push: Successful
+- Test commit: `7769d5fec3b7ebad6a0e76b4a10eae7a57fe995f`
+- Argo CD sync status: `Synced`
+- Argo CD health status: `Healthy`
+- Frontend deployment: `3/3` replicas ready
+- Backend deployment: `1/1` replica ready
+- Recorded observation window: Approximately 6 minutes and 30 seconds, from the timestamp recorded before the push to the final time check.
+
+**Conclusion:** The test demonstrated that a change to the Helm configuration in Git was detected by Argo CD and reflected in the Kubernetes deployment automatically. The recorded observation window is approximate; the exact time at which all replicas became ready was not captured.
+
+### Deployed Container Images
+
+The running frontend and backend deployments were verified to use the following images from GitHub Container Registry (GHCR):
+
+| Service | Image |
+|---|---|
+| Frontend | `ghcr.io/hifzandocker/frontend:e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a` |
+| Backend | `ghcr.io/hifzandocker/backend:e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a` |
+
+These are commit-SHA-tagged images. The image tags were verified in the running Kubernetes deployments. The corresponding GitHub Actions workflow should also be checked to confirm that it publishes these exact tags.
+
+### GitOps Architecture
+
+```mermaid
+flowchart TD
+    DEV[Developer] -->|Push source code| GH[GitHub Repository]
+    GH -->|Trigger CI workflow| CI[GitHub Actions]
+    CI -->|Lint and test| TEST[Validation]
+    TEST -->|Build images| BUILD[Docker Image Build]
+    BUILD -->|Publish commit-SHA tags| GHCR[GitHub Container Registry]
+
+    GH -->|Monitor Helm configuration| ARGO[Argo CD]
+    ARGO -->|Read desired state| HELM[Helm Chart and Values]
+    HELM -->|Render manifests| ARGO
+    ARGO -->|Automated synchronization| K8S[Kubernetes on Minikube]
+
+    K8S --> FE[Frontend Deployment and Service]
+    K8S --> BE[Backend Deployment and Service]
+
+    ARGO -->|Synchronization notifications| SLACK[Slack]
+```
+
+### Workflow Explanation
+
+1. **Source control:** Application code and Kubernetes deployment configuration are maintained in GitHub.
+2. **Continuous integration:** GitHub Actions runs the configured linting and unit tests and builds container images.
+3. **Image registry:** Built images are published to GHCR using commit-SHA tags.
+4. **Continuous deployment:** Argo CD monitors the Git repository and uses the Helm chart and `values-gitops.yaml` to define the desired Kubernetes state.
+5. **Automated synchronization:** Argo CD applies detected configuration changes to Kubernetes according to its automated sync policy.
+6. **Health verification:** Kubernetes deployment readiness and the application health endpoints are checked to confirm that services are running.
+7. **Notifications:** Argo CD sends synchronization notifications to Slack when the configured notification triggers are met.
+
+### Prerequisites
+
+- Docker
+- Git
+- kubectl
+- Minikube
+- Helm
+- A GitHub account and access to the project repository
+- An Argo CD installation and a Slack incoming webhook for notifications
+
+### Verification Commands
+
+Check Argo CD application status:
+
+```powershell
+kubectl get application microservices-gitops -n argocd
+```
+
+Check deployed workloads:
+
+```powershell
+kubectl get deployments -n gitops-demo
+kubectl get pods -n gitops-demo
+kubectl get services -n gitops-demo
+```
+
+Check deployed container image tags:
+
+```powershell
+kubectl get deployments -n gitops-demo -o jsonpath="{range .items[*]}{.metadata.name}{': '}{range .spec.template.spec.containers[*]}{.image}{' '}{end}{'\n'}{end}"
+```
+
+Render the Helm chart locally to inspect the generated Kubernetes manifests:
+
+```powershell
+helm template microservices-gitops helm/microservices -f helm/microservices/values-gitops.yaml
+```
+
+Check the current Git revision:
+
+```powershell
+git rev-parse HEAD
+```
+
+### Security Notes
+
+- Store Slack webhook URLs in Kubernetes Secrets, not in Git-tracked files or README documentation.
+- Never commit passwords, tokens, or webhook URLs.
+- Rotate any webhook URL that has been exposed.
+- Keep container images pinned to specific tags rather than relying on the mutable `latest` tag.
+
+### Week 4 Outcome
+
+The project demonstrates Git-based deployment configuration with Argo CD, automated synchronization, Helm-managed Kubernetes workloads, and Slack notification integration. A real configuration change was pushed to GitHub and verified in the running Kubernetes deployment.
+
+Before final submission, verify that the GitHub Actions workflow publishes the same image tags referenced by the Helm values and that Slack notifications are still working with a valid, secured webhook.

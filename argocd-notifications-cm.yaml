@@ -1,0 +1,29 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.webhook.slack-incoming-webhook: |
+    url: $slack-webhook-url
+    headers:
+      - name: Content-Type
+        value: application/json
+
+  template.slack-app-status: |
+    webhook:
+      slack-incoming-webhook:
+        method: POST
+        body: |
+          {
+            "text": "Argo CD application {{.app.metadata.name}}: sync={{.app.status.sync.status}}, health={{.app.status.health.status}}"
+          }
+
+  trigger.on-sync-succeeded: |
+    - when: app.status.operationState.phase == 'Succeeded'
+      send: [slack-app-status]
+
+  trigger.on-sync-failed: |
+    - when: app.status.operationState.phase in ['Error', 'Failed']
+      send: [slack-app-status]
