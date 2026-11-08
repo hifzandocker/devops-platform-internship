@@ -1,0 +1,95 @@
+grafana:
+  enabled: true
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+      folder: /tmp/dashboards
+      defaultFolderName: DevOps Internship
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 3d
+    replicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 768Mi
+    storageSpec: {}
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    secrets:
+      - alertmanager-smtp
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+  config:
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'haadihifzan121@gmail.com'
+      smtp_auth_username: 'haadihifzan121@gmail.com'
+      smtp_auth_password_file: '/etc/alertmanager/secrets/alertmanager-smtp/smtp-auth-password'
+      smtp_require_tls: true
+    route:
+      receiver: email-notifications
+      group_by:
+        - alertname
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 1h
+    receivers:
+      - name: email-notifications
+        email_configs:
+          - to: 'haadihifzan121@gmail.com'
+            send_resolved: true
+      - name: "null"
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+defaultRules:
+  create: true
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  enabled: false

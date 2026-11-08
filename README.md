@@ -6,9 +6,12 @@ This repository is the single GitHub repository used throughout the internship. 
 
 ## Current Status
 
-**Week 1 — Complete**
-
-Week 1 establishes the microservice and Docker foundation for the project.
+- **Week 1 — Complete**
+- **Week 2 — Complete**
+- **Week 3 — Complete**
+- **Week 4 — Complete**
+- **Week 5 — Observability and Alerting — Implemented and verified**
+- **Week 6 — Planned**
 
 ## Repository Structure
 
@@ -37,6 +40,16 @@ Week 1 establishes the microservice and Docker foundation for the project.
 |-- infra/
 |-- k8s/
 |-- gateway/
+|-- helm/
+|   `-- microservices/
+|-- charts/
+|   `-- kube-prometheus-stack/
+|-- monitoring/
+|   |-- alerts/
+|   |-- grafana/
+|   |   `-- dashboards/
+|   `-- istio-podmonitor.yaml
+|-- monitoring-values.yaml
 |-- observability/
 |
 `-- .github/
@@ -47,11 +60,11 @@ Week 1 establishes the microservice and Docker foundation for the project.
 
 `week-1/verification.md` contains the detailed Week 1 verification record.
 
-The remaining directories are reserved for work that will be added during later weeks.
+The remaining directories are used for work added during the internship.
 
 ## Prerequisites
 
-The following tools were installed and verified during Week 1:
+The following tools were installed and verified during the internship:
 
 | Tool           | Version / Result |
 | -------------- | ---------------- |
@@ -61,6 +74,7 @@ The following tools were installed and verified during Week 1:
 | kubectl        | v1.34.1          |
 | Helm           | v4.3.0           |
 | Terraform      | v1.16.4          |
+| Minikube       | v1.39.0          |
 
 ### WSL
 
@@ -146,9 +160,15 @@ Verified:
 Terraform v1.16.4
 ```
 
-## Week 1 Architecture
+## Week 1 — Microservices and Docker Foundation
 
-The Week 1 implementation consists of two independent HTTP microservices running as Docker containers.
+### Objectives
+
+Week 1 establishes the microservice and Docker foundation for the project.
+
+### Week 1 Architecture
+
+The implementation consists of two independent HTTP microservices running as Docker containers.
 
 ```text
                          Developer
@@ -160,16 +180,16 @@ The Week 1 implementation consists of two independent HTTP microservices running
                  |                     |
                  v                     v
           Frontend Service      Backend Service
-             Port 8080             Port 8081
+             Port 8080              Port 8081
                  |                     |
                  v                     v
           Docker Container      Docker Container
-             UID 1001              UID 1001
+             UID 1001               UID 1001
 ```
 
 The frontend and backend are independent HTTP microservices.
 
-## Frontend
+### Frontend
 
 Location:
 
@@ -179,26 +199,25 @@ services/frontend/
 
 The frontend listens on port `8080`.
 
-### Endpoints
+Endpoints:
 
-`GET /health`
+- `GET /health`
+- `GET /info`
 
-Verified result:
+Verified `/health` response:
 
 ```text
 HTTP 200 OK
 OK
 ```
 
-`GET /info`
-
-Verified result:
+Verified `/info` response:
 
 ```json
 {"service": "frontend", "version": "1.0.0"}
 ```
 
-## Backend
+### Backend
 
 Location:
 
@@ -208,67 +227,66 @@ services/backend/
 
 The backend listens on port `8081`.
 
-### Endpoints
+Endpoints:
 
-`GET /health`
+- `GET /health`
+- `GET /info`
 
-Verified result:
+Verified `/health` response:
 
 ```text
 HTTP 200 OK
 OK
 ```
 
-`GET /info`
-
-Verified result:
+Verified `/info` response:
 
 ```json
 {"service": "backend", "version": "1.0.0"}
 ```
 
-## Docker Implementation
+### Docker Implementation
 
 Both services use:
 
-* Multi-stage Dockerfiles
-* `python:3.14-slim`
-* Non-root runtime user `1001`
-* `.dockerignore`
+- Multi-stage Dockerfiles
+- `python:3.14-slim`
+- Non-root runtime user `1001`
+- `.dockerignore`
 
-## Build
+### Build
 
 Run these commands from the repository root.
 
-### Frontend
+Frontend:
 
 ```powershell
 docker build -t frontend:week1 .\services\frontend
 ```
 
-### Backend
+Backend:
 
 ```powershell
 docker build -t backend:week1 .\services\backend
 ```
 
-## Run
+### Run
 
-### Frontend
+Frontend:
 
 ```powershell
 docker run -d --name frontend-week1 -p 8080:8080 frontend:week1
 ```
 
-### Backend
+Backend:
 
 ```powershell
 docker run -d --name backend-week1 -p 8081:8081 backend:week1
 ```
 
-## Verification
+### Verification
 
-### Frontend
+Frontend:
 
 ```powershell
 curl.exe -i http://localhost:8080/health
@@ -288,7 +306,7 @@ Verified `/info` response:
 {"service": "frontend", "version": "1.0.0"}
 ```
 
-### Backend
+Backend:
 
 ```powershell
 curl.exe -i http://localhost:8081/health
@@ -308,7 +326,7 @@ Verified `/info` response:
 {"service": "backend", "version": "1.0.0"}
 ```
 
-## Container User Verification
+### Container User Verification
 
 The configured Docker user was verified with:
 
@@ -333,7 +351,7 @@ docker exec backend-week1 id
 
 The containers were verified to run with UID `1001`.
 
-## Week 1 Verification Record
+### Week 1 Verification Record
 
 Detailed verification evidence is available in:
 
@@ -343,7 +361,7 @@ week-1/verification.md
 
 It records the prerequisite checks, Docker builds, container execution, endpoint tests, and non-root user verification completed during Week 1.
 
-## Cleanup
+### Cleanup
 
 Stop and remove the Week 1 containers:
 
@@ -357,26 +375,6 @@ Remove the local images if no longer needed:
 docker rmi frontend:week1 backend:week1
 ```
 
-## Development Workflow
-
-Changes are made locally and tracked with Git.
-
-```powershell
-git status
-git add .
-git commit -m "description of change"
-git push
-```
-
-The same GitHub repository will be used throughout the internship.
-
-## Security
-
-The repository uses `.gitignore` to exclude common generated and sensitive local files.
-
-Real passwords, API keys, access tokens, credentials, and other secrets must never be committed to the repository.
-
-
 ## Week 2 — Kubernetes, Helm, and Service Mesh
 
 ### Objectives
@@ -388,6 +386,7 @@ Week 2 extends the Week 1 Dockerized microservices into a local Kubernetes envir
 The local Kubernetes cluster runs using Minikube with the Docker driver.
 
 Verified tools:
+
 - Minikube v1.39.0
 - kubectl v1.34.1
 - Helm v4.3.0
@@ -405,6 +404,7 @@ The chart deploys the frontend and backend with configurable image repositories,
 Both deployments use non-root UID `1001`, disable privilege escalation, and drop Linux capabilities.
 
 Services are exposed internally as Kubernetes `ClusterIP` services:
+
 - Frontend: port `8080`
 - Backend: port `8081`
 
@@ -490,6 +490,7 @@ Both endpoints returned `OK` during verification.
 ### Week 2 Status
 
 Completed:
+
 - Parameterized Helm chart for frontend and backend
 - Local Minikube Kubernetes deployment
 - Istio installation using Helm
@@ -497,8 +498,6 @@ Completed:
 - `PeerAuthentication` configured for strict mTLS
 - Injected-client backend connectivity test
 - Helm lint and rendered-manifest validation
-
-
 
 ## Week 3 — Kong API Gateway and CI/CD
 
@@ -638,8 +637,7 @@ Completed and verified:
 - GitHub Actions linting and unit tests passed
 - Frontend and backend Docker images published to GHCR with commit-SHA tags
 
-
-## Week 4: GitOps Continuous Deployment
+## Week 4 — GitOps Continuous Deployment
 
 ### Objectives and Implementation
 
@@ -679,10 +677,10 @@ Completed and verified:
 
 The running frontend and backend deployments were verified to use the following images from GitHub Container Registry (GHCR):
 
-| Service | Image |
-|---|---|
+| Service  | Image                                                                    |
+| -------- | ------------------------------------------------------------------------ |
 | Frontend | `ghcr.io/hifzandocker/frontend:e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a` |
-| Backend | `ghcr.io/hifzandocker/backend:e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a` |
+| Backend  | `ghcr.io/hifzandocker/backend:e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a`  |
 
 These are commit-SHA-tagged images. The image tags were verified in the running Kubernetes deployments. The corresponding GitHub Actions workflow should also be checked to confirm that it publishes these exact tags.
 
@@ -773,3 +771,423 @@ git rev-parse HEAD
 The project demonstrates Git-based deployment configuration with Argo CD, automated synchronization, Helm-managed Kubernetes workloads, and Slack notification integration. A real configuration change was pushed to GitHub and verified in the running Kubernetes deployment.
 
 Before final submission, verify that the GitHub Actions workflow publishes the same image tags referenced by the Helm values and that Slack notifications are still working with a valid, secured webhook.
+
+## Week 5 — Observability and Alerting
+
+### Objectives
+
+Week 5 adds a monitoring and alerting stack to the Kubernetes platform. Prometheus collects metrics, Grafana provides dashboards, and Alertmanager evaluates and routes alerts to an email notification channel.
+
+The monitoring stack was deployed into the `monitoring` namespace. Application workloads remain in the `gitops-demo` namespace.
+
+### Monitoring Architecture
+
+```mermaid
+flowchart TD
+    APP[Frontend and Backend Pods]
+    ISTIO[Istio Sidecar Proxies]
+    PROM[Prometheus]
+    RULES[Prometheus Alert Rules]
+    AM[Alertmanager]
+    EMAIL[Email Notifications]
+    GRAFANA[Grafana Dashboard]
+
+    APP --> ISTIO
+    ISTIO -->|Application traffic metrics| PROM
+    PROM -->|Collected metrics| GRAFANA
+    PROM -->|Evaluate alert rules| RULES
+    RULES -->|Firing alerts| AM
+    AM -->|SMTP| EMAIL
+```
+
+### Prometheus and Grafana Installation
+
+The `kube-prometheus-stack` Helm chart was deployed using the local chart:
+
+```text
+charts/kube-prometheus-stack/
+```
+
+Configuration is stored in:
+
+```text
+monitoring-values.yaml
+```
+
+The Helm release is named `monitoring` and is installed in the `monitoring` namespace.
+
+Validate the chart:
+
+```powershell
+helm lint .\charts\kube-prometheus-stack -f .\monitoring-values.yaml
+```
+
+Upgrade or install the monitoring release:
+
+```powershell
+helm upgrade --install monitoring .\charts\kube-prometheus-stack -n monitoring --create-namespace -f .\monitoring-values.yaml --wait --timeout 10m
+```
+
+Check the release:
+
+```powershell
+helm status monitoring -n monitoring
+```
+
+Check monitoring pods:
+
+```powershell
+kubectl get pods -n monitoring
+```
+
+The deployed stack includes:
+
+- Prometheus
+- Grafana
+- Alertmanager
+- Prometheus Operator
+- kube-state-metrics
+- node-exporter
+
+### Monitoring Resource Configuration
+
+The stack was configured with resource requests and limits suitable for the local Minikube environment.
+
+Prometheus retention was configured for three days, with a single replica and no persistent storage.
+
+Grafana dashboard provisioning was enabled through a sidecar that discovers labeled ConfigMaps.
+
+The Minikube control-plane metrics endpoints for the controller manager, scheduler, and etcd were disabled in the chart configuration because those components were listening on loopback addresses and could not be scraped through the node IP.
+
+### Accessing Monitoring Services
+
+Use separate PowerShell terminals for port forwarding. Keep each terminal open while using the corresponding web interface.
+
+Prometheus:
+
+```powershell
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+```
+
+Open:
+
+```text
+http://localhost:9090
+```
+
+Grafana:
+
+```powershell
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+Alertmanager:
+
+```powershell
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-alertmanager 9093:9093
+```
+
+Open:
+
+```text
+http://localhost:9093
+```
+
+### Istio Application Metrics
+
+Application traffic metrics were collected from the Istio sidecar proxies in the `gitops-demo` namespace.
+
+The PodMonitor configuration is stored in:
+
+```text
+monitoring/istio-podmonitor.yaml
+```
+
+It selects the application pods and scrapes the Istio proxy metrics endpoint:
+
+```text
+/stats/prometheus
+```
+
+The configuration uses port `15090` and a 15-second scrape interval.
+
+Apply the PodMonitor:
+
+```powershell
+kubectl apply -f .\monitoring\istio-podmonitor.yaml
+```
+
+Verify the resource:
+
+```powershell
+kubectl get podmonitor -n monitoring
+```
+
+Prometheus Targets showed the Istio PodMonitor targets as `UP` (4/4).
+
+The collected Istio metrics include request counts, response codes, and request duration histograms.
+
+Example PromQL queries:
+
+Request rate:
+
+```promql
+sum(rate(istio_requests_total[5m]))
+```
+
+HTTP 5xx request count rate:
+
+```promql
+sum(rate(istio_requests_total{response_code=~"5.."}[5m]))
+```
+
+Application request latency P95:
+
+```promql
+histogram_quantile(
+  0.95,
+  sum by (le) (
+    rate(istio_request_duration_milliseconds_bucket[5m])
+  )
+)
+```
+
+### Grafana Dashboard
+
+The custom dashboard is stored as JSON:
+
+```text
+monitoring/grafana/dashboards/devops-overview.json
+```
+
+The dashboard is provisioned through a Kubernetes ConfigMap named:
+
+```text
+devops-overview-dashboard
+```
+
+The ConfigMap is labeled:
+
+```text
+grafana_dashboard=1
+```
+
+Grafana's dashboard sidecar discovers labeled ConfigMaps and loads the dashboard into the `DevOps Internship` folder.
+
+The dashboard contains the following panels:
+
+| Panel               | Purpose                                       |
+| ------------------- | --------------------------------------------- |
+| Request Rate        | Displays the application request rate         |
+| HTTP Error Rate (%) | Displays the percentage of HTTP 5xx responses |
+| Request Latency P95 | Displays the 95th percentile request latency  |
+
+The dashboard uses Prometheus as its data source.
+
+### Alert Rules
+
+Custom application alert rules are stored in:
+
+```text
+monitoring/alerts/app-alerts.yaml
+```
+
+The rules are deployed as a PrometheusRule resource named:
+
+```text
+devops-application-alerts
+```
+
+The resource is installed in the `monitoring` namespace and labeled for the `monitoring` Prometheus release.
+
+Apply the rules:
+
+```powershell
+kubectl apply -f .\monitoring\alerts\app-alerts.yaml
+```
+
+Verify the resource:
+
+```powershell
+kubectl get prometheusrule -n monitoring
+```
+
+The three configured application alerts are:
+
+| Alert                    | Condition                                               | Severity | Pending duration |
+| ------------------------ | ------------------------------------------------------- | -------- | ---------------- |
+| `HighHTTPErrorRate`      | HTTP 5xx error rate exceeds 5%                          | Critical | 2 minutes        |
+| `HighRequestLatency`     | P95 request latency exceeds 500 ms                      | Warning  | 2 minutes        |
+| `NoReadyApplicationPods` | No ready application pods are detected in `gitops-demo` | Critical | 1 minute         |
+
+The `NoReadyApplicationPods` rule uses:
+
+```promql
+sum(
+  kube_pod_status_ready{
+    namespace="gitops-demo",
+    condition="true"
+  }
+) < 1
+```
+
+Prometheus evaluates the expression and changes the alert to firing when the condition remains true for the configured duration.
+
+### Alertmanager Email Notifications
+
+Alertmanager is configured to send email notifications through Gmail SMTP.
+
+The SMTP configuration uses:
+
+```text
+smtp.gmail.com:587
+```
+
+The SMTP password is stored in a Kubernetes Secret named:
+
+```text
+alertmanager-smtp
+```
+
+The password is mounted into Alertmanager and read from a file. Credentials are not stored in the repository or this README.
+
+The Alertmanager configuration includes:
+
+- SMTP authentication
+- TLS for SMTP delivery
+- An email receiver
+- Grouping by alert name
+- A 10-second initial group wait
+- A one-minute group interval
+- A one-hour repeat interval
+- Resolved notifications enabled
+
+The configured notification recipient is the project alert email address.
+
+A manual test alert was submitted to Alertmanager and successfully delivered by email. This verified the SMTP configuration and email notification path.
+
+**Security:** Gmail app passwords and other SMTP credentials must remain in Kubernetes Secrets or another secure secret-management system. Never commit them to Git.
+
+### Alert Testing and Recovery Verification
+
+**Test objective:** Deliberately make all application pods unavailable and verify that Prometheus detects the outage and Alertmanager sends an email notification.
+
+**Test procedure:**
+
+1. Temporarily disabled Argo CD self-healing so that it would not immediately revert the manual scaling change.
+2. Scaled the backend and frontend deployments to zero replicas:
+
+   ```powershell
+   kubectl scale deployment microservices-gitops-backend microservices-gitops-frontend -n gitops-demo --replicas=0
+   ```
+
+3. Checked the `NoReadyApplicationPods` alert in the Prometheus Alerts page.
+4. Verified that the ready-pod count fell to `0`, the alert expression evaluated to true, the alert transitioned from `Pending` to `Firing` after the configured one-minute duration, and Alertmanager delivered the email notification.
+5. Confirmed that an email notification for `NoReadyApplicationPods` arrived successfully.
+6. Restored the backend to one replica and the frontend to three replicas:
+
+   ```powershell
+   kubectl scale deployment microservices-gitops-backend -n gitops-demo --replicas=1
+   kubectl scale deployment microservices-gitops-frontend -n gitops-demo --replicas=3
+   ```
+
+7. Waited for both deployments to complete their rollouts.
+8. Re-enabled Argo CD self-healing.
+
+**Verified results:**
+
+| Check                       | Result                         |
+| --------------------------- | ------------------------------ |
+| Alert condition             | True                           |
+| Prometheus alert state      | `Firing`                       |
+| Alert name                  | `NoReadyApplicationPods`       |
+| Alert severity              | `critical`                     |
+| Email notification          | Received successfully          |
+| Backend recovery            | `2/2 Running`                  |
+| Frontend recovery           | Three pods, each `2/2 Running` |
+| Backend deployment rollout  | Successful                     |
+| Frontend deployment rollout | Successful                     |
+| Argo CD sync status         | `Synced`                       |
+| Argo CD health status       | `Healthy`                      |
+| Argo CD self-healing        | Re-enabled                     |
+
+The final application pod check showed:
+
+```text
+microservices-gitops-backend    2/2 Running
+microservices-gitops-frontend   2/2 Running
+microservices-gitops-frontend   2/2 Running
+microservices-gitops-frontend   2/2 Running
+```
+
+Argo CD application status:
+
+```text
+NAME                   SYNC STATUS   HEALTH STATUS
+microservices-gitops   Synced        Healthy
+```
+
+The test demonstrated that Prometheus detected the application outage, the alert transitioned to firing, Alertmanager delivered the email notification, and the application workloads were restored successfully.
+
+### Week 5 Verification Commands
+
+Check monitoring resources:
+
+```powershell
+kubectl get pods -n monitoring
+kubectl get services -n monitoring
+kubectl get prometheusrule -n monitoring
+kubectl get podmonitor -n monitoring
+```
+
+Check application workloads:
+
+```powershell
+kubectl get deployments -n gitops-demo
+kubectl get pods -n gitops-demo
+```
+
+Check Argo CD status:
+
+```powershell
+kubectl get application microservices-gitops -n argocd
+```
+
+Check the current automated sync policy:
+
+```powershell
+kubectl get application microservices-gitops -n argocd -o jsonpath="{.spec.syncPolicy.automated}"
+```
+
+### Week 5 Outcome
+
+The project now includes a Helm-deployed Prometheus, Grafana, and Alertmanager monitoring stack, a custom Grafana dashboard provisioned through Kubernetes resources, Istio application metrics, and three custom application alert rules.
+
+The email notification channel was tested successfully. A deliberate application outage triggered the `NoReadyApplicationPods` alert, and an email notification was received. The deployments were restored, all application containers returned to Ready status, and Argo CD returned to `Synced` and `Healthy` with self-healing re-enabled.
+
+## Security
+
+The repository uses `.gitignore` to exclude common generated and sensitive local files.
+
+Real passwords, API keys, access tokens, credentials, SMTP passwords, Slack webhook URLs, and other secrets must never be committed to the repository.
+
+Use Kubernetes Secrets or a dedicated secret-management solution for credentials. Avoid putting secret values directly into Helm values files or documentation.
+
+## Development Workflow
+
+Changes are made locally and tracked with Git.
+
+```powershell
+git status
+git add .
+git commit -m "description of change"
+git push
+```
+
+The same GitHub repository will be used throughout the internship.

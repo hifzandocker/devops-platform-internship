@@ -1,0 +1,19 @@
+﻿apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: istio-proxies
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - gitops-demo
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: microservices-gitops
+      security.istio.io/tlsMode: istio
+  podMetricsEndpoints:
+    - portNumber: 15090
+      path: /stats/prometheus
+      interval: 15s
