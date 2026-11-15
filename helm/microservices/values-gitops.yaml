@@ -1,4 +1,4 @@
-serviceAccount:
+﻿serviceAccount:
   create: true
   automount: false
   annotations: {}
@@ -7,6 +7,9 @@ serviceAccount:
 # Configuration for the frontend and backend microservices
 
 frontend:
+  rollout:
+    enabled: false
+    keepDeployment: true
   replicaCount: 3
   image:
     repository: ghcr.io/hifzandocker/frontend
@@ -38,7 +41,6 @@ backend:
     repository: ghcr.io/hifzandocker/backend
     tag: e370cf4c0f0661801fd9fa06b6fc5fd4056fdc0a
     pullPolicy: Always
-
   service:
     type: ClusterIP
     port: 8081

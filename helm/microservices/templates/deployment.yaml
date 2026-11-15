@@ -1,4 +1,5 @@
-{{- range $name, $config := dict "frontend" .Values.frontend "backend" .Values.backend }}
+﻿{{- range $name, $config := dict "frontend" .Values.frontend "backend" .Values.backend }}
+{{- if or (ne $name "frontend") (not $.Values.frontend.rollout.enabled) $.Values.frontend.rollout.keepDeployment }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,4 +42,5 @@ spec:
           resources:
             {{- toYaml $config.resources | nindent 12 }}
 ---
+{{- end }}
 {{- end }}

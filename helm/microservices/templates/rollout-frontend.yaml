@@ -1,0 +1,68 @@
+﻿{{- if .Values.frontend.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "microservices.fullname" . }}-frontend-rollout
+  labels:
+    {{- include "microservices.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend-rollout
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: frontend-rollout
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: frontend-rollout
+    spec:
+      serviceAccountName: {{ include "microservices.serviceAccountName" . }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.frontend.healthCheck.path }}
+              port: http
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.frontend.healthCheck.path }}
+              port: http
+          securityContext:
+            {{- toYaml .Values.frontend.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+  strategy:
+    canary:
+      stableService: {{ include "microservices.fullname" . }}-frontend
+      canaryService: {{ include "microservices.fullname" . }}-frontend-canary
+      trafficRouting:
+        istio:
+          virtualService:
+            name: {{ include "microservices.fullname" . }}-frontend
+            routes:
+              - frontend
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 60s
+        - setWeight: 25
+        - pause:
+            duration: 60s
+        - setWeight: 50
+        - pause:
+            duration: 60s
+        - setWeight: 100
+{{- end }}

@@ -1,4 +1,4 @@
-apiVersion: argoproj.io/v1alpha1
+﻿apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: microservices-gitops
@@ -15,9 +15,30 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: gitops-demo
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: microservices-gitops-frontend
+      namespace: gitops-demo
+      jsonPointers:
+        - /spec/selector/rollouts-pod-template-hash
+    - group: ""
+      kind: Service
+      name: microservices-gitops-frontend-canary
+      namespace: gitops-demo
+      jsonPointers:
+        - /spec/selector/rollouts-pod-template-hash
+    - group: networking.istio.io
+      kind: VirtualService
+      name: microservices-gitops-frontend
+      namespace: gitops-demo
+      jqPathExpressions:
+        - .spec.http[].route[].weight
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - RespectIgnoreDifferences=true

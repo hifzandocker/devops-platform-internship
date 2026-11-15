@@ -1,4 +1,4 @@
-serviceAccount:
+﻿serviceAccount:
   create: true
   automount: false
   annotations: {}
@@ -7,6 +7,9 @@ serviceAccount:
 # Configuration for the frontend and backend microservices
 
 frontend:
+  rollout:
+    enabled: false
+    keepDeployment: true
   replicaCount: 1
   image:
     repository: frontend
