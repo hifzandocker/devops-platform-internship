@@ -8,7 +8,7 @@
 
 frontend:
   rollout:
-    enabled: false
+    enabled: true
     keepDeployment: true
   replicaCount: 3
   image:
