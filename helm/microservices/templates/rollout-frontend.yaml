@@ -58,11 +58,32 @@ spec:
         - setWeight: 10
         - pause:
             duration: 60s
+        - analysis:
+            templates:
+              - templateName: frontend-canary-analysis
+            args:
+              - name: canaryHash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 25
         - pause:
             duration: 60s
+        - analysis:
+            templates:
+              - templateName: frontend-canary-analysis
+            args:
+              - name: canaryHash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 50
         - pause:
             duration: 60s
+        - analysis:
+            templates:
+              - templateName: frontend-canary-analysis
+            args:
+              - name: canaryHash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 100
 {{- end }}

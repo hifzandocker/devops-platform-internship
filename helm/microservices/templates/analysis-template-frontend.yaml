@@ -1,0 +1,70 @@
+﻿apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-canary-analysis
+spec:
+  args:
+    - name: canaryHash
+  metrics:
+    - name: canary-minimum-request-volume
+      interval: 30s
+      count: 1
+      successCondition: len(result) > 0 && result[0] >= 5
+      failureCondition: len(result) == 0 || result[0] < 5
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            sum(
+              increase(
+                istio_requests_total{
+                  destination_workload_namespace="gitops-demo",
+                  destination_workload="microservices-gitops-frontend-rollout",
+                  reporter="destination",
+                  pod=~"microservices-gitops-frontend-rollout-{{ "{{" }}args.canaryHash{{ "}}" }}-.*"
+                }[5m]
+              )
+            )
+    - name: canary-http-5xx-rate
+      interval: 30s
+      count: 1
+      successCondition: len(result) > 0 && result[0] < 5
+      failureCondition: len(result) > 0 && result[0] >= 5
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            100 *
+            (
+              (
+                sum(
+                  increase(
+                    istio_requests_total{
+                      destination_workload_namespace="gitops-demo",
+                      destination_workload="microservices-gitops-frontend-rollout",
+                      reporter="destination",
+                      response_code=~"5..",
+                      pod=~"microservices-gitops-frontend-rollout-{{ "{{" }}args.canaryHash{{ "}}" }}-.*"
+                    }[5m]
+                  )
+                ) or vector(0)
+              )
+              /
+              clamp_min(
+                (
+                  sum(
+                    increase(
+                      istio_requests_total{
+                        destination_workload_namespace="gitops-demo",
+                        destination_workload="microservices-gitops-frontend-rollout",
+                        reporter="destination",
+                        pod=~"microservices-gitops-frontend-rollout-{{ "{{" }}args.canaryHash{{ "}}" }}-.*"
+                      }[5m]
+                    )
+                  ) or vector(0)
+                ),
+                1
+              )
+            )
