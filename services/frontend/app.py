@@ -14,7 +14,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
         if self.path == "/info":
             response = {
                 "service": "frontend",
-                "version": "1.0.0"
+                "version": "1.1.0"
             }
 
             body = json.dumps(response).encode("utf-8")

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import threading
 import unittest
 from http.server import HTTPServer
@@ -36,7 +37,7 @@ class FrontendTests(unittest.TestCase):
             self.assertEqual(response.status, 200)
             self.assertEqual(
                 json.loads(response.read()),
-                {"service": "frontend", "version": "1.0.0"},
+                {"service": "frontend", "version": "1.1.0"},
             )
 
     def test_unknown_path(self):
@@ -48,5 +49,3 @@ class FrontendTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
