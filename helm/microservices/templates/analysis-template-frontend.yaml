@@ -11,7 +11,7 @@ spec:
       count: 1
       successCondition: len(result) > 0 && result[0] >= 5
       failureCondition: len(result) == 0 || result[0] < 5
-      failureLimit: 1
+      failureLimit: 0
       provider:
         prometheus:
           address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
@@ -31,7 +31,7 @@ spec:
       count: 1
       successCondition: len(result) > 0 && result[0] < 5
       failureCondition: len(result) > 0 && result[0] >= 5
-      failureLimit: 1
+      failureLimit: 0
       provider:
         prometheus:
           address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
