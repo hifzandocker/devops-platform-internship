@@ -1,4 +1,4 @@
-{{- if .Values.frontend.rollout.enabled }}
+﻿{{- if .Values.frontend.rollout.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: frontend-rollout
       annotations:
-        devops-platform-internship/canary-retry: "19a9414-retry3"
+        devops-platform-internship/canary-retry: "19a9414-retry4"
     spec:
       serviceAccountName: {{ include "microservices.serviceAccountName" . }}
       containers:
