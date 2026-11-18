@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/name: frontend
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: frontend-rollout
+      annotations:
+        devops-platform-internship/canary-retry: "19a9414"
     spec:
       serviceAccountName: {{ include "microservices.serviceAccountName" . }}
       containers:
