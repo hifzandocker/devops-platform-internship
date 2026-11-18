@@ -13,7 +13,7 @@ frontend:
   replicaCount: 3
   image:
     repository: ghcr.io/hifzandocker/frontend
-    tag: 39500bda7c2be5a78103c15b4bd48f3ca071d8c7
+    tag: 44aea6dbfe1b6b564b527ae3524fa67ca2e06b47
     pullPolicy: Always
   service:
     type: ClusterIP
