@@ -1,6 +1,8 @@
 ﻿import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+FRONTEND_VERSION = "1.1.1"
+
 
 class FrontendHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -14,7 +16,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
         if self.path == "/info":
             response = {
                 "service": "frontend",
-                "version": "1.1.0"
+                "version": FRONTEND_VERSION,
             }
 
             body = json.dumps(response).encode("utf-8")
