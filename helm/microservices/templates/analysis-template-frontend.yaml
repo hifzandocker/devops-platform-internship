@@ -54,19 +54,14 @@ spec:
                 ) or vector(0)
               )
               /
-              clamp_min(
-                (
-                  sum(
-                    increase(
-                      istio_requests_total{
-                        destination_workload_namespace="gitops-demo",
-                        destination_workload="microservices-gitops-frontend-rollout",
-                        reporter="destination",
-                        pod=~"microservices-gitops-frontend-rollout-{{ "{{" }}args.canaryHash{{ "}}" }}-.*"
-                      }[5m]
-                    )
-                  ) or vector(0)
-                ),
-                1
+              sum(
+                increase(
+                  istio_requests_total{
+                    destination_workload_namespace="gitops-demo",
+                    destination_workload="microservices-gitops-frontend-rollout",
+                    reporter="destination",
+                    pod=~"microservices-gitops-frontend-rollout-{{ "{{" }}args.canaryHash{{ "}}" }}-.*"
+                  }[5m]
+                )
               )
             )
