@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: frontend-rollout
       annotations:
-        devops-platform-internship/canary-retry: "19a9414-retry2"
+        devops-platform-internship/canary-retry: "19a9414-retry3"
     spec:
       serviceAccountName: {{ include "microservices.serviceAccountName" . }}
       containers:
@@ -59,7 +59,7 @@ spec:
       steps:
         - setWeight: 10
         - pause:
-            duration: 60s
+            duration: 180s
         - analysis:
             templates:
               - templateName: frontend-canary-analysis
@@ -69,7 +69,7 @@ spec:
                   podTemplateHashValue: Latest
         - setWeight: 25
         - pause:
-            duration: 60s
+            duration: 180s
         - analysis:
             templates:
               - templateName: frontend-canary-analysis
@@ -79,7 +79,7 @@ spec:
                   podTemplateHashValue: Latest
         - setWeight: 50
         - pause:
-            duration: 60s
+            duration: 180s
         - analysis:
             templates:
               - templateName: frontend-canary-analysis
